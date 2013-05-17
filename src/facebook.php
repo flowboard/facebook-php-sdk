@@ -45,8 +45,8 @@ class Facebook extends BaseFacebook
    * @see BaseFacebook::__construct in facebook.php
    */
   public function __construct($config) {
-    if (!session_id()) {
-      session_start();
+    if (! $this->getSessionId()) {
+      $this->startSession();
     }
     parent::__construct($config);
     if (!empty($config['sharedSession'])) {
@@ -106,7 +106,7 @@ class Facebook extends BaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    $_SESSION[$session_var_name] = $value;
+    $this->setSessionData($session_var_name, $value);
   }
 
   protected function getPersistentData($key, $default = false) {
@@ -116,8 +116,9 @@ class Facebook extends BaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    return isset($_SESSION[$session_var_name]) ?
-      $_SESSION[$session_var_name] : $default;
+    $session_var = $this->getSessionData($session_var_name);
+    return (isset($session_var)) ?
+      $session_var : $default;
   }
 
   protected function clearPersistentData($key) {
@@ -127,7 +128,7 @@ class Facebook extends BaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    unset($_SESSION[$session_var_name]);
+    $this->unsetSessionData($session_var_name);
   }
 
   protected function clearAllPersistentData() {

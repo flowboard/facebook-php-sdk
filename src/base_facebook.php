@@ -488,9 +488,10 @@ abstract class BaseFacebook
    */
   public function getSignedRequest() {
     if (!$this->signedRequest) {
-      if (!empty($_REQUEST['signed_request'])) {
+      $signed_request = $this->getRequestVar('signed_request');
+      if (!empty($signed_request)) {
         $this->signedRequest = $this->parseSignedRequest(
-          $_REQUEST['signed_request']);
+          $signed_request);
       } else if (!empty($_COOKIE[$this->getSignedRequestCookieName()])) {
         $this->signedRequest = $this->parseSignedRequest(
           $_COOKIE[$this->getSignedRequestCookieName()]);
@@ -688,15 +689,17 @@ abstract class BaseFacebook
    *               code could not be determined.
    */
   protected function getCode() {
-    if (isset($_REQUEST['code'])) {
+    $code = $this->getRequestVar('code');
+    if (isset($code)) {
+      $state = $this->getRequestVar('state');
       if ($this->state !== null &&
-          isset($_REQUEST['state']) &&
-          $this->state === $_REQUEST['state']) {
+          isset($state) &&
+          $this->state === $state) {
 
         // CSRF state has done its job, so clear it
         $this->state = null;
         $this->clearPersistentData('state');
-        return $_REQUEST['code'];
+        return $this->getRequestVar('code');
       } else {
         self::errorLog('CSRF state token does not match one provided.');
         return false;
@@ -1408,6 +1411,71 @@ abstract class BaseFacebook
       return true;
     }
     return substr($big, -$len) === $small;
+  }
+
+
+  /**
+   * Returns the session id of the current session
+   *  
+   * @param  string $id Optional will replace the current session id. 
+   * @return string  The id or '' 
+   */
+  protected static function unsetSessionData($session_var_name)
+  {
+        unset($_SESSION[$session_var_name]);
+        return TRUE;
+  }
+  /**
+   * Returns the session id of the current session
+   *  
+   * @param  string $id Optional will replace the current session id. 
+   * @return string  The id or '' 
+   */
+  protected static function getSessionData($session_var_name)
+  {
+        return (isset($_SESSION[$session_var_name])) ? $_SESSION[$session_var_name] : NULL;
+  }
+  /**
+   * Returns the session id of the current session
+   *  
+   * @param  string $id Optional will replace the current session id. 
+   * @return string  The id or '' 
+   */
+  protected static function setSessionData($session_var_name, $value)
+  {
+        $_SESSION[$session_var_name] = $value;
+        return TRUE;
+  }
+  /**
+   * Returns the session id of the current session
+   *  
+   * @param  string $id Optional will replace the current session id. 
+   * @return string  The id or '' 
+   */
+  protected static function getSessionId($id = FALSE)
+  {
+      return session_id($id);
+  }
+
+  /**
+   * Returns the session id of the current session
+   *  
+   * @return BOOL  True if it was successfull or False if it wasn't  
+   */
+  protected static function startSession()
+  {
+      return session_start();
+  }
+
+  /**
+   * Returns the requested variable stored in REQUEST 
+   *  
+   * @param  string $var The name of the variable stored in REQUEST
+   * @return mixed  The requested variable 
+   */
+  protected static function getRequestVar($var)
+  {
+      return (isset($_REQUEST[$var])) ? $_REQUEST[$var] : NULL;
   }
 
   /**
